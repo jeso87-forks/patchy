@@ -828,6 +828,10 @@ function refresh_certs() {
         rm -f "$site.pem" "$site-key.pem"
         make_cert "$site" $(list_site_aliases "$site")
     done
+    # Apache keeps serving the old certs from memory until it reloads them
+    if is_apache_running; then
+        restart_server
+    fi
 }
 
 function cert_days_left() {
