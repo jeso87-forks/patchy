@@ -834,8 +834,10 @@ function cert_days_left() {
     local cert=$1 end_date end_epoch secs
     end_date=$(openssl x509 -enddate -noout -in "$cert" 2>/dev/null) || return 1
     end_date=${end_date#notAfter=}
-    # %e not %d: openssl space-pads single-digit days ("Sep  9")
-    end_epoch=$(date -j -f "%b %e %T %Y %Z" "$end_date" +%s 2>/dev/null) || return 1
+    # %e not %d: openssl space-pads single-digit days ("Sep  9").
+    # LC_ALL=C: openssl always prints English month names, but %b parses
+    # them in the user's locale, so a German/French/etc. Mac fails here.
+    end_epoch=$(LC_ALL=C date -j -f "%b %e %T %Y %Z" "$end_date" +%s 2>/dev/null) || return 1
     secs=$(( end_epoch - $(date +%s) ))
     echo $(( secs < 0 ? (secs - 86399) / 86400 : secs / 86400 ))
 }
